@@ -1,0 +1,16 @@
+{
+  "name": "gas-relay",
+  "version": "1.0.0",
+  "description": "Gas Relay Node for Smartlockers",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "dotenv": "^7.0.0",
+    "web3": "^1.0.0-beta.52"
+  },
+  "devDependencies": {},
+  "author": "Tomek Kalinowski",
+  "license": "MIT"
+}
