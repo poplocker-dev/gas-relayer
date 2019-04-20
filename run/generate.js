@@ -1,8 +1,17 @@
+require('dotenv').config()
+
 const { web3 } = require('../lib/provider')
 
-async function generate () {
+async function generate (oldKey=false) {
   try {
-    const key = '0x' + await web3.shh.newSymKey()
+
+    let key = null;
+
+    if (oldKey)
+      key = process.env.SYM_KEY
+    else
+      key = '0x' + await web3.shh.newSymKey()
+
     const kid = await web3.shh.addSymKey(key)
     console.log(`SYM_KEY=${key}`)
     console.log(`SYM_KEY_ID=${kid}`)
@@ -16,4 +25,4 @@ async function generate () {
   }
 }
 
-generate()
+generate(process.argv[2])
