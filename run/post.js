@@ -1,11 +1,13 @@
 require('dotenv').config()
 const { web3 } = require('../lib/provider')
 
-async function post (topic, symKeyID, payload) {
+async function post (topic, symKey, payload) {
   try {
-    console.log('topic:', topic);
-    console.log('payload:', payload);
-    console.log('sending for:', symKeyID);
+    const symKeyID = await web3.shh.addSymKey(symKey)
+
+    console.log('topic:', topic)
+    console.log('payload:', payload)
+    console.log('sending for:', symKeyID)
 
     const hash = await web3.shh.post({
       ttl: 300,
@@ -16,7 +18,7 @@ async function post (topic, symKeyID, payload) {
       topic: web3.utils.toHex(topic),
       payload: web3.utils.asciiToHex(payload)
     })
-    console.log(`sent ${hash}`);
+    console.log(`sent ${hash}`)
     process.exitCode = 0
     process.exit()
   }
@@ -27,4 +29,4 @@ async function post (topic, symKeyID, payload) {
   }
 }
 
-post('SLGR', process.env.SYM_KEY_ID, process.argv[2])
+post('SLGR', process.env.SYM_KEY, process.argv[2])
