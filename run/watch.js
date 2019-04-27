@@ -32,13 +32,18 @@ function processTx (err, result, sk) {
           }
 
           eth.accounts
-             .signTransaction(outerTx, sk).then(signed => {
+             .signTransaction(outerTx, sk)
+             .then(signed => {
                eth
-                 .sendSignedTransaction(signed.rawTransaction)
-                 .then(r => console.log(`SENT : ${to} : ${r}`))
-             }).catch(e => { console.log(`DROP : ${to}`); reject(e) })
+                 .sendSignedTransaction(signed.rawTransaction, (err, hash) => {
+                   if (err)
+                     reject(err)
+                   else
+                     resolve({ to, hash })
+                 })
+             }).catch(e => { console.log(`DROP : ${to} :  'tx sign'`); reject(e) })
 
-        }).catch(e => { console.log(`DROP : ${to}`); reject(e) })
+        }).catch(e => { console.log(`DROP : ${to} : gas estimate`); reject(e) })
     }
   }).catch(console.error)
 }
@@ -55,7 +60,9 @@ async function watch (symKey, secret, topic) {
     console.log('whisper version:', version);
 
     shh.subscribe('messages', { symKeyID, topics }, (e,r) => {
-      processTx(e,r,sk).catch(console.error)
+      processTx(e,r,sk)
+        .then(tx => console.log(`SENT : ${tx.to} : ${tx.hash}`))
+        .catch(console.error)
     })
 
     console.log('subscribed to:', topic)
