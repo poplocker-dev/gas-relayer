@@ -16,20 +16,20 @@ Start geth node:
 $ ./scripts/geth_ropsten
 ```
 
+Copy and edit `.env.sample`:
+
+```
+$ cp .env.sample .env
+```
+
 Generate keys:
 
 ```
-$ node ./run/generate.js > .env
+$ node ./run/generate.js <password for sk> <universal relay name> >> .env
 ```
 
-Run message listener:
+Run meta tx listener:
 
 ```
-$ node ./run/watch.js
-```
-
-Post some stuff:
-
-```
-$ node ./run/post 'some stuff'
+$ node ./run/watch.js <password for sk>
 ```
