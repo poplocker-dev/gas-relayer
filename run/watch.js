@@ -1,25 +1,62 @@
-const SimpleCrypto = require('simple-crypto-js')
-const { web3 }     = require('../lib/provider')
+const SimpleCrypto = require('simple-crypto-js').default
+const { eth, shh } = require('../lib/provider')
+const abi          = require('../config/smartlocker.abi.json') //cached
 require('dotenv').config()
 
-async function processTx (err, result) {
-  if (err)
-    console.error(err)
-  else {
-    const payload = web3.utils.hexToAscii(result.payload)
-    console.log('message!', payload)
-  }
+function processTx (err, result, sk) {
+  return new Promise((resolve, reject) => {
+    if (err) reject(err)
+    else {
+      const metaTx   = JSON.parse(eth.utils.hexToAscii(result.payload))
+      const contract = new eth.Contract(abi, metaTx.from)
+      const { from, to, value, data, gasPrice, gasLimit, signature } = metaTx
+
+      console.log(`RQ : ${to} : ${value}`)
+
+      return contract
+        .methods
+        .executeSigned(to, value, data, gasPrice, gasLimit, signature)
+        .estimateGas().then(gasEstimate => {
+
+          const encoded = contract.methods
+                                  .executeSigned(to, value, data, gasPrice, gasLimit, signature)
+                                  .encodeABI()
+          const outerTx = {
+            from: process.env.ACCOUNT,
+            to: from,
+            gasLimit: gasEstimate,
+            gasPrice,
+            data: encoded,
+            chainId: 3,
+            value: '0x0'
+          }
+
+          eth.accounts
+             .signTransaction(outerTx, sk).then(signed => {
+               eth
+                 .sendSignedTransaction(signed.rawTransaction)
+                 .then(r => console.log(`SENT : ${to} : ${r}`))
+             }).catch(e => { console.log(`DROP : ${to}`); reject(e) })
+
+        }).catch(e => { console.log(`DROP : ${to}`); reject(e) })
+    }
+  }).catch(console.error)
 }
 
-async function watch (symKey, topic) {
+async function watch (symKey, secret, topic) {
   try {
-    const symKeyID = await web3.shh.addSymKey(symKey)
-    const version  = await web3.shh.getVersion()
-    const topics   = [web3.utils.toHex(topic)]
+    const symKeyID = await shh.addSymKey(symKey)
+    const version  = await shh.getVersion()
+    const topics   = [eth.utils.toHex(topic)]
+    const sk       = (new SimpleCrypto(secret)).decrypt(process.env.ENCRYPTED)
+
+    if (!sk) throw('FATAL : key decryption failed')
 
     console.log('whisper version:', version);
 
-    web3.shh.subscribe('messages', { symKeyID, topics }, processTx)
+    shh.subscribe('messages', { symKeyID, topics }, (e,r) => {
+      processTx(e,r,sk).catch(console.error)
+    })
 
     console.log('subscribed to:', topic)
     console.log('sym key id:', symKeyID)
@@ -31,4 +68,4 @@ async function watch (symKey, topic) {
   }
 }
 
-watch(process.env.SYM_KEY, 'SLGR')
+watch(process.env.SYM_KEY, process.argv[2], 'SLGR')

@@ -2,22 +2,25 @@ const SimpleCrypto = require('simple-crypto-js').default
 const wallet       = require('ethereumjs-wallet')
 require('dotenv').config()
 
-const { web3 } = require('../lib/provider')
+const { shh } = require('../lib/provider')
 
-async function generate (secret) {
+async function generate (secret, uname) {
   try {
     if (!secret)
       throw('Provide secret for private key!')
+    if (!uname)
+      throw('Provide universal name for symkey')
 
-    const symKey    = '0x' + await web3.shh.newSymKey()
-    const keys      = wallet.generate();
-    const sk        = keys.getPrivateKeyString();
-    const account   = keys.getChecksumAddressString();
-    const encrypted = (new SimpleCrypto(sk)).encrypt(secret);
+    const symKey    = '0x' + await shh.generateSymKeyFromPassword(uname)
+    const keys      = wallet.generate()
+    const sk        = keys.getPrivateKeyString()
+    const account   = keys.getChecksumAddressString()
+    const encrypted = (new SimpleCrypto(secret)).encrypt(sk)
 
+    console.log(`UNAME=${uname}`)
     console.log(`SYM_KEY=${symKey}`)
-    console.log(`ACCOUNT=${account}`);
-    console.log(`ENCRYPTED=${encrypted}`);
+    console.log(`ACCOUNT=${account}`)
+    console.log(`ENCRYPTED=${encrypted}`)
 
     process.exitCode = 0
     process.exit()
@@ -29,4 +32,4 @@ async function generate (secret) {
   }
 }
 
-generate(process.argv[2])
+generate(process.argv[2], process.argv[3])
