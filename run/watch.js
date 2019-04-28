@@ -27,7 +27,7 @@ function processTx (err, result, sk) {
             gasLimit: gasEstimate,
             gasPrice,
             data: encoded,
-            chainId: 3,
+            chainId: process.env.CHAIN_ID,
             value: '0x0'
           }
 
