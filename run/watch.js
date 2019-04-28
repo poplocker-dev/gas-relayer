@@ -48,12 +48,34 @@ function processTx (err, result, sk) {
   }).catch(console.error)
 }
 
+const setupNonce = () => {
+  let latest = eth.utils.toBN(0)
+  const one  = eth.utils.toBN(1)
+
+  return {
+    get current () { return '0x' + latest.toString(16) },
+
+    async track () {
+      latest = eth.utils.toBN(await eth.getTransactionCount(process.env.ACCOUNT))
+      return this.current
+    },
+
+    up () {
+      latest = latest.add(one)
+      return this.current
+    }
+  }
+}
+
 async function watch (symKey, secret, topic) {
   try {
     const symKeyID = await shh.addSymKey(symKey)
     const version  = await shh.getVersion()
     const topics   = [eth.utils.toHex(topic)]
     const sk       = (new SimpleCrypto(secret)).decrypt(process.env.ENCRYPTED)
+    const nonce    = setupNonce()
+
+    nonce.track().then(n => console.log('latest nonce:', n) )
 
     if (!sk) throw('FATAL : key decryption failed')
 
@@ -62,6 +84,7 @@ async function watch (symKey, secret, topic) {
     shh.subscribe('messages', { symKeyID, topics }, (e,r) => {
       processTx(e,r,sk)
         .then(tx => console.log(`SENT : ${tx.to} : ${tx.hash}`))
+        .then(() => nonce.up())
         .catch(console.error)
     })
 
