@@ -3,9 +3,9 @@ const { eth, shh } = require('../lib/provider')
 const abi          = require('../config/smartlocker.abi.json') //cached
 require('dotenv').config()
 
-function processTx (err, result, sk) {
+function processTx (error, result, sk, nonce) {
   return new Promise((resolve, reject) => {
-    if (err) reject(err)
+    if (error) reject(error)
     else {
       const metaTx   = JSON.parse(eth.utils.hexToAscii(result.payload))
       const contract = new eth.Contract(abi, metaTx.from)
@@ -24,20 +24,21 @@ function processTx (err, result, sk) {
           const outerTx = {
             from: process.env.ACCOUNT,
             to: from,
-            gasLimit: gasEstimate,
+            gas: gasEstimate,
             gasPrice,
             data: encoded,
-            chainId: process.env.CHAIN_ID,
-            value: '0x0'
+            chainId: parseInt(process.env.CHAIN_ID),
+            value: '0x0',
+            nonce
           }
 
           eth.accounts
              .signTransaction(outerTx, sk)
              .then(signed => {
                eth
-                 .sendSignedTransaction(signed.rawTransaction, (err, hash) => {
-                   if (err)
-                     reject(err)
+                 .sendSignedTransaction(signed.rawTransaction, (error, hash) => {
+                   if (error)
+                     reject(error)
                    else
                      resolve({ to, hash })
                  })
@@ -67,9 +68,9 @@ const setupNonce = () => {
   }
 }
 
-async function watch (symKey, secret, topic) {
+async function watch (topic, secret) {
   try {
-    const symKeyID = await shh.addSymKey(symKey)
+    const symKeyID = await shh.generateSymKeyFromPassword(topic)
     const version  = await shh.getVersion()
     const topics   = [eth.utils.toHex(topic)]
     const sk       = (new SimpleCrypto(secret)).decrypt(process.env.ENCRYPTED)
@@ -81,15 +82,14 @@ async function watch (symKey, secret, topic) {
 
     console.log('whisper version:', version);
 
-    shh.subscribe('messages', { symKeyID, topics }, (e,r) => {
-      processTx(e,r,sk)
+    shh.subscribe('messages', { symKeyID, topics }, (error, result) => {
+      processTx(error, result, sk, nonce.current)
         .then(tx => console.log(`SENT : ${tx.to} : ${tx.hash}`))
         .then(() => nonce.up())
         .catch(console.error)
     })
 
     console.log('subscribed to:', topic)
-    console.log('sym key id:', symKeyID)
   }
   catch(e) {
     console.error(e)
@@ -98,4 +98,4 @@ async function watch (symKey, secret, topic) {
   }
 }
 
-watch(process.env.SYM_KEY, process.argv[2], 'SLGR')
+watch(process.env.GAS_RELAY_TOPIC, process.argv[2])
