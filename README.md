@@ -25,11 +25,11 @@ $ cp .env.sample .env
 Generate keys:
 
 ```
-$ node ./run/generate.js <password for sk> <universal relay name> >> .env
+$ node ./run/generate.js <password> >> .env
 ```
 
 Run meta tx listener:
 
 ```
-$ node ./run/watch.js <password for sk>
+$ node ./run/watch.js <password>
 ```
