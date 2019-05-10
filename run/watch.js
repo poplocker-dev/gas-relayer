@@ -1,26 +1,37 @@
-const SimpleCrypto = require('simple-crypto-js').default
-const { eth, shh } = require('../lib/provider')
-const abi          = require('../config/smartlocker.abi.json') //cached
+const SimpleCrypto   = require('simple-crypto-js').default
+const { eth, shh }   = require('../lib/provider')
+const registrarAbi   = require('../config/registrar.abi.json') //cached
+const smartLockerAbi = require('../config/smartlocker.abi.json') //cached
 require('dotenv').config()
 
 function processTx (error, result, sk, nonce) {
   return new Promise((resolve, reject) => {
     if (error) reject(error)
     else {
-      const metaTx   = JSON.parse(eth.utils.hexToAscii(result.payload))
-      const contract = new eth.Contract(abi, metaTx.from)
+      const metaTx = JSON.parse(eth.utils.hexToAscii(result.payload))
       const { from, to, value, data, gasPrice, gasLimit, signature } = metaTx
+
+      const registrarContract = new eth.Contract(registrarAbi, process.env.REGISTRAR_ADDRESS)
+      const smartLockerContract = new eth.Contract(smartLockerAbi, from)
 
       console.log(`RQ : ${to} : ${value}`)
 
-      return contract
+      return registrarContract
         .methods
-        .executeSigned(to, value, data, gasPrice, gasLimit, signature)
-        .estimateGas().then(gasEstimate => {
+        .getName(from)
+        .call()
+        .then(smartLockerName => {
+          if (!smartLockerName || smartLockerName.length == 0) throw('Invalid SmartLocker')
+        })
+        .then(smartLockerContract
+          .methods
+          .executeSigned(to, value, data, gasPrice, gasLimit, signature)
+          .estimateGas)
+        .then(gasEstimate => {
 
-          const encoded = contract.methods
-                                  .executeSigned(to, value, data, gasPrice, gasLimit, signature)
-                                  .encodeABI()
+          const encoded = smartLockerContract.methods
+                                             .executeSigned(to, value, data, gasPrice, gasLimit, signature)
+                                             .encodeABI()
 
           const outerTxGasPrice = gasPrice - process.env.FEE;
           if (outerTxGasPrice < process.env.SAFE_LOW) throw('Gas price too low')

@@ -1,0 +1,85 @@
+[
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "keyname",
+        "type": "string"
+      }
+    ],
+    "name": "createSmartLocker",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "fallback"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "name": "smartLockerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "SmartLockerCreated",
+    "type": "event"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "getAddress",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "smartLockerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "getName",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
