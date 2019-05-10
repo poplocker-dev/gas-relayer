@@ -21,11 +21,15 @@ function processTx (error, result, sk, nonce) {
           const encoded = contract.methods
                                   .executeSigned(to, value, data, gasPrice, gasLimit, signature)
                                   .encodeABI()
+
+          const outerTxGasPrice = gasPrice - process.env.FEE;
+          if (outerTxGasPrice < process.env.SAFE_LOW) throw('Gas price too low')
+
           const outerTx = {
             from: process.env.ACCOUNT,
             to: from,
             gas: gasEstimate,
-            gasPrice,
+            gasPrice: outerTxGasPrice,
             data: encoded,
             chainId: parseInt(process.env.CHAIN_ID),
             value: '0x0',
@@ -46,23 +50,26 @@ function processTx (error, result, sk, nonce) {
 
         }).catch(e => { console.log(`DROP : ${to} : gas estimate`); reject(e) })
     }
-  }).catch(console.error)
+  })
 }
 
 const setupNonce = () => {
   let latest = eth.utils.toBN(0)
   const one  = eth.utils.toBN(1)
+  let timeStamp = 0
 
   return {
     get current () { return '0x' + latest.toString(16) },
 
     async track () {
-      latest = eth.utils.toBN(await eth.getTransactionCount(process.env.ACCOUNT))
+      remote = eth.utils.toBN(await eth.getTransactionCount(process.env.ACCOUNT))
+      if (remote.gt(latest) || Date.now() - timeStamp > process.env.NONCE_TTL) latest = remote
       return this.current
     },
 
     up () {
       latest = latest.add(one)
+      timeStamp = Date.now()
       return this.current
     }
   }
@@ -83,10 +90,11 @@ async function watch (topic, secret) {
     console.log('whisper version:', version);
 
     shh.subscribe('messages', { symKeyID, topics }, (error, result) => {
-      processTx(error, result, sk, nonce.current)
-        .then(tx => console.log(`SENT : ${tx.to} : ${tx.hash}`))
-        .then(() => nonce.up())
-        .catch(console.error)
+      nonce.track()
+           .then(n => processTx(error, result, sk, n))
+           .then(tx => console.log(`SENT : ${tx.to} : ${tx.hash}`))
+           .then(() => nonce.up())
+           .catch(console.error)
     })
 
     console.log('subscribed to:', topic)
