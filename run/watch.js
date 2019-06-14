@@ -8,7 +8,7 @@ function processTx (error, result, sk, nonce) {
   return new Promise((resolve, reject) => {
     if (error) reject(error)
     else {
-      const metaTx = JSON.parse(eth.utils.hexToAscii(result.payload))
+      const metaTx = JSON.parse(eth.utils.hexToUtf8(result.payload))
       const { from, to, value, data, gasPrice, gasLimit, signature } = metaTx
 
       const registrarContract = new eth.Contract(registrarAbi, process.env.REGISTRAR_ADDRESS)
