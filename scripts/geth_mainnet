@@ -1,0 +1,4 @@
+#!/bin/bash
+
+geth --syncmode fast --shh  --ws --wsorigins="*" --wsapi "shh" --rpc --rpcapi "eth"
+
