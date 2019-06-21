@@ -10,14 +10,21 @@ $ npm install
 
 # Running
 
-Start geth node:
+Start geth node (this will also start whisper node):
+- **Do not connect to a light client or Infura node** - sending multiple transactions in the same block will not work
 
+```
+$ ./scripts/geth_mainnet
+```
+or
 ```
 $ ./scripts/geth_ropsten
 ```
 
 Copy and edit `.env.sample`:
-
+- RPC_URL should be http://localhost:8545 for default local geth node
+- SHH_URL should be ws://localhost:8546 for default local whisper node
+- see **Generate Keys** to add new account and encrpyted password
 ```
 $ cp .env.sample .env
 ```
