@@ -11,14 +11,14 @@ $ npm install
 # Running
 
 Start geth node (this will also start whisper node):
-- **Do not connect to a light client or Infura node** - sending multiple txs in same block will not work
+- **Do not connect to a light client or Infura node** - sending multiple transactions in the same block will not work
 
 ```
-$ ./scripts/geth_ropsten
+$ ./scripts/geth_mainnet
 ```
 or
 ```
-$ ./scripts/geth_mainnet
+$ ./scripts/geth_ropsten
 ```
 
 Copy and edit `.env.sample`:
