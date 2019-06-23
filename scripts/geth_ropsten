@@ -1,4 +1,3 @@
 #!/bin/bash
 
-geth --testnet --syncmode fast --shh  --ws --wsorigins="*" --wsapi "shh" --rpc --rpcapi "eth"
-
+geth --testnet --syncmode fast --shh  --ws --wsorigins="*" --wsapi "shh,net" --rpc --rpcapi "eth,net"
