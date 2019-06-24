@@ -98,6 +98,7 @@ async function watch (topic, secret) {
 
     if (!sk) throw('FATAL : key decryption failed')
 
+    //console.log('private key:', sk);
     console.log('whisper version:', version);
 
     shh.subscribe('messages', { symKeyID, topics }, (error, result) => {
