@@ -40,3 +40,5 @@ Run meta tx listener:
 ```
 $ node ./run/watch.js <password>
 ```
+
+Fund the account (on mainnet or ropsten) with enough ETH to cover gas for one transaction
