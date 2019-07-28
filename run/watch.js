@@ -94,7 +94,8 @@ async function watch (topic, secret) {
     const sk       = (new SimpleCrypto(secret)).decrypt(process.env.ENCRYPTED)
     const nonce    = setupNonce()
 
-    nonce.track().then(n => console.log('latest nonce:', n) )
+    process.title = 'gas-relayer';
+    nonce.track().then(n => console.log('latest nonce:', n) );
 
     if (!sk) throw('FATAL : key decryption failed')
 
